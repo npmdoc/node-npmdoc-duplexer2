@@ -1,0 +1,331 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a>duplexer2 (v0.1.4)</a>
+</h1>
+<h4>Like duplexer but using streams3</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.duplexer2">module duplexer2</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.duplexer2.duplexer2">
+            function <span class="apidocSignatureSpan"></span>duplexer2
+            <span class="apidocSignatureSpan">(options, writable, readable)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.duplexer2.DuplexWrapper">
+            function <span class="apidocSignatureSpan">duplexer2.</span>DuplexWrapper
+            <span class="apidocSignatureSpan">(options, writable, readable)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">duplexer2.</span>DuplexWrapper.prototype</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.duplexer2.DuplexWrapper">module duplexer2.DuplexWrapper</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.duplexer2.DuplexWrapper.DuplexWrapper">
+            function <span class="apidocSignatureSpan">duplexer2.</span>DuplexWrapper
+            <span class="apidocSignatureSpan">(options, writable, readable)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.duplexer2.DuplexWrapper.prototype">module duplexer2.DuplexWrapper.prototype</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.duplexer2.DuplexWrapper.prototype._read">
+            function <span class="apidocSignatureSpan">duplexer2.DuplexWrapper.prototype.</span>_read
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.duplexer2.DuplexWrapper.prototype._write">
+            function <span class="apidocSignatureSpan">duplexer2.DuplexWrapper.prototype.</span>_write
+            <span class="apidocSignatureSpan">(input, encoding, done)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.duplexer2" id="apidoc.module.duplexer2">module duplexer2</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.duplexer2.duplexer2" id="apidoc.element.duplexer2.duplexer2">
+        function <span class="apidocSignatureSpan"></span>duplexer2
+        <span class="apidocSignatureSpan">(options, writable, readable)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function duplex2(options, writable, readable) {
+  return new DuplexWrapper(options, writable, readable);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.duplexer2.DuplexWrapper" id="apidoc.element.duplexer2.DuplexWrapper">
+        function <span class="apidocSignatureSpan">duplexer2.</span>DuplexWrapper
+        <span class="apidocSignatureSpan">(options, writable, readable)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function DuplexWrapper(options, writable, readable) {
+  if (typeof readable === "undefined") {
+    readable = writable;
+    writable = options;
+    options = null;
+  }
+
+  stream.Duplex.call(this, options);
+
+  if (typeof readable.read !== "function") {
+    readable = (new stream.Readable(options)).wrap(readable);
+  }
+
+  this._writable = writable;
+  this._readable = readable;
+  this._waiting = false;
+
+  var self = this;
+
+  writable.once("finish", function() {
+    self.end();
+  });
+
+  this.once("finish", function() {
+    writable.end();
+  });
+
+  readable.on("readable", function() {
+    if (self._waiting) {
+      self._waiting = false;
+      self._read();
+    }
+  });
+
+  readable.once("end", function() {
+    self.push(null);
+  });
+
+  if (!options || typeof options.bubbleErrors === "undefined" || options.bubbleErrors) {
+    writable.on("error", function(err) {
+      self.emit("error", err);
+    });
+
+    readable.on("error", function(err) {
+      self.emit("error", err);
+    });
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.duplexer2.DuplexWrapper" id="apidoc.module.duplexer2.DuplexWrapper">module duplexer2.DuplexWrapper</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.duplexer2.DuplexWrapper.DuplexWrapper" id="apidoc.element.duplexer2.DuplexWrapper.DuplexWrapper">
+        function <span class="apidocSignatureSpan">duplexer2.</span>DuplexWrapper
+        <span class="apidocSignatureSpan">(options, writable, readable)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function DuplexWrapper(options, writable, readable) {
+  if (typeof readable === "undefined") {
+    readable = writable;
+    writable = options;
+    options = null;
+  }
+
+  stream.Duplex.call(this, options);
+
+  if (typeof readable.read !== "function") {
+    readable = (new stream.Readable(options)).wrap(readable);
+  }
+
+  this._writable = writable;
+  this._readable = readable;
+  this._waiting = false;
+
+  var self = this;
+
+  writable.once("finish", function() {
+    self.end();
+  });
+
+  this.once("finish", function() {
+    writable.end();
+  });
+
+  readable.on("readable", function() {
+    if (self._waiting) {
+      self._waiting = false;
+      self._read();
+    }
+  });
+
+  readable.once("end", function() {
+    self.push(null);
+  });
+
+  if (!options || typeof options.bubbleErrors === "undefined" || options.bubbleErrors) {
+    writable.on("error", function(err) {
+      self.emit("error", err);
+    });
+
+    readable.on("error", function(err) {
+      self.emit("error", err);
+    });
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.duplexer2.DuplexWrapper.prototype" id="apidoc.module.duplexer2.DuplexWrapper.prototype">module duplexer2.DuplexWrapper.prototype</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.duplexer2.DuplexWrapper.prototype._read" id="apidoc.element.duplexer2.DuplexWrapper.prototype._read">
+        function <span class="apidocSignatureSpan">duplexer2.DuplexWrapper.prototype.</span>_read
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function _read() {
+  var buf;
+  var reads = 0;
+  while ((buf = this._readable.read()) !== null) {
+    this.push(buf);
+    reads++;
+  }
+  if (reads === 0) {
+    this._waiting = true;
+  }
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+this.once("finish", function() {
+  writable.end();
+});
+
+readable.on("readable", function() {
+  if (self._waiting) {
+    self._waiting = false;
+    self.<span class="apidocCodeKeywordSpan">_read</span>();
+  }
+});
+
+readable.once("end", function() {
+  self.push(null);
+});
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.duplexer2.DuplexWrapper.prototype._write" id="apidoc.element.duplexer2.DuplexWrapper.prototype._write">
+        function <span class="apidocSignatureSpan">duplexer2.DuplexWrapper.prototype.</span>_write
+        <span class="apidocSignatureSpan">(input, encoding, done)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function _write(input, encoding, done) {
+  this._writable.write(input, encoding, done);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
